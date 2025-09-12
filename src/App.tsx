@@ -44,7 +44,16 @@ function App() {
     <div className="bg-animated-gradient full-screen w-full flex items-center justify-center">
       <audio ref={audioRef} src="/music.mp3" preload="auto" loop />
       <div className="w-full max-w-sm px-4 py-6">
-        <Envelope />
+        <Envelope
+          onOpen={() => {
+            const a = audioRef.current;
+            if (a) {
+              a.currentTime = 0;
+              a.volume = 0.6;
+              a.play().catch(() => {});
+            }
+          }}
+        />
       </div>
     </div>
   );
