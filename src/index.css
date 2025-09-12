@@ -161,3 +161,21 @@ input[type="date"].input-fluid {
     transform: translateY(-6px) scale(0.98);
   }
 }
+
+/* Scroll snap utilities for wheel pickers */
+.scroll-snap-y {
+  scroll-snap-type: y mandatory;
+}
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+}
+.snap-center {
+  scroll-snap-align: center;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}

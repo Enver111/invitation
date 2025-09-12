@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import PlaceInput from "./PlaceInput";
 import DatePicker from "./DatePicker";
+import TimePicker from "./TimePicker";
 
 const LETTER_SLIDE_DELAY_MS = 450;
 
@@ -18,11 +19,13 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   const [place, setPlace] = useState("");
   const [placePreset, setPlacePreset] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [touchedSubmit, setTouchedSubmit] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [configToast, setConfigToast] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const overlayCardRef = useRef<HTMLDivElement | null>(null);
@@ -47,11 +50,17 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   };
 
   const placeOk = place.trim().length > 0 || placePreset.trim().length > 0;
-  const canSend = placeOk && !!date;
+  const dateOk = !!date;
+  const timeOk = /^([01]\d|2[0-3]):[0-5]\d$/.test(time) || time === "";
+  const canSend = placeOk && dateOk && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
   const showToast = (message: string) => {
     setToast(message);
     setTimeout(() => setToast(null), 2000);
+  };
+  const showConfigHint = (message: string) => {
+    setConfigToast(message);
+    setTimeout(() => setConfigToast(null), 2200);
   };
 
   const handleYes = async () => {
@@ -59,13 +68,13 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
     if (isSending) return;
     if (!canSend) {
       const needPlace = !placeOk;
-      const needDate = !date;
-      const message =
-        needPlace && needDate
-          ? "Выберите место и дату"
-          : needPlace
-          ? "Пожалуйста, выберите место"
-          : "Пожалуйста, выберите дату";
+      const needDate = !dateOk;
+      const needTime = !/^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+      const parts: string[] = [];
+      if (needPlace) parts.push("место");
+      if (needDate) parts.push("дату");
+      if (needTime) parts.push("время");
+      const message = `Выберите: ${parts.join(", ")}`;
       showToast(message);
       return;
     }
@@ -76,7 +85,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (!BOT_TOKEN || !CHAT_ID) throw new Error("Нет Telegram настроек");
       const chosenPlace = placePreset || place;
-      const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date}`;
+      const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}`;
       const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
       const res = await fetch(url, {
         method: "POST",
@@ -86,7 +95,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       if (!res.ok) throw new Error("Ошибка отправки");
       setSent(true);
     } catch (e: any) {
-      setSendError(e?.message || "Неизвестная ошибка");
+      const msg = e?.message || "Неизвестная ошибка";
+      if (msg.includes("Telegram")) {
+        showConfigHint("Нет Telegram настроек");
+      } else {
+        setSendError(msg);
+      }
     } finally {
       setIsSending(false);
     }
@@ -94,7 +108,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
 
   return (
     <div className="w-full flex items-center justify-center">
-      {/* Full letter overlay */}
       {showOverlay && (
         <div className="fixed inset-0 z-[60] overflow-y-auto">
           <div className="min-h-full flex justify-center px-2 py-4">
@@ -102,6 +115,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
               ref={overlayCardRef}
               className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-8 max-w-sm w-full full-letter-enter envelope-shadow relative overflow-visible"
             >
+              {configToast && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-2 px-3 py-2 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-marck text-sm shadow toast-appear">
+                  {configToast}
+                </div>
+              )}
+
               <h2 className="text-3xl font-ruslan text-center mb-2">
                 Небольшая прогулка?
               </h2>
@@ -122,6 +141,15 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 Когда?
               </label>
               <DatePicker value={date} onChange={setDate} />
+
+              <label className="block text-sm font-marck mt-4 mb-1">
+                Во сколько?
+              </label>
+              <TimePicker
+                value={time}
+                onChange={setTime}
+                error={touchedSubmit && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)}
+              />
 
               {sendError && (
                 <div className="mt-2 text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 text-sm">
@@ -154,17 +182,17 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 >
                   Согласиться
                 </button>
-              </div>
 
-              <div className="text-sm font-marck text-gray-800 text-center mt-4">
-                P.S. Я очень жду ответа Enver O.
+                <div className="text-sm font-marck text-gray-800 text-center mt-4">
+                  P.S. Я очень жду ответа Enver O.
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Envelope view */}
+      {/* Envelope view remains the same below */}
       <div
         ref={containerRef}
         className={`relative envelope-shadow perspective-1000 rounded-lg ${
@@ -174,7 +202,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       >
         {/* Back panel */}
         <div className="absolute inset-0 bg-[#DFB891] rounded-lg border border-gray-300 z-10" />
-
         {/* Letter (starts under pocket-front) */}
         <div
           className={`absolute left-3 right-3 top-3 bottom-3 bg-white rounded-md envelope-shadow flex items-center justify-center transition-transform z-20 ${
@@ -191,8 +218,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
             </div>
           </div>
         </div>
-
-        {/* Pocket front (covers lower ~70%) */}
+        {/* Pocket front */}
         <div
           className="absolute left-0 right-0 bg-[#DFB891] border-t border-gray-300 z-30"
           style={{
@@ -202,7 +228,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
             borderBottomRightRadius: 12,
           }}
         />
-
         {/* Top flap */}
         <div
           className={`absolute left-0 right-0 top-0 h-1/2 bg-[#DFB891] border-b border-black rounded-t-lg origin-top transition-transform duration-700 preserve-3d z-40 ${
@@ -210,7 +235,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
           }`}
           style={{ backfaceVisibility: "hidden" }}
         />
-
         {/* Icon button */}
         <button
           onClick={handleOpenClick}
