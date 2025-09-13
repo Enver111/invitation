@@ -23,11 +23,9 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [sendError, setSendError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [touchedSubmit, setTouchedSubmit] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [configToast, setConfigToast] = useState<string | null>(null);
   const [confetti, setConfetti] = useState<number>(0);
   const [confettiOrigin, setConfettiOrigin] = useState<{
     x: number;
@@ -64,10 +62,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
     setToast(message);
     setTimeout(() => setToast(null), 2000);
   };
-  const showConfigHint = (message: string) => {
-    setConfigToast(message);
-    setTimeout(() => setConfigToast(null), 2200);
-  };
 
   const handleYes = async () => {
     setTouchedSubmit(true);
@@ -94,7 +88,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
     }
     setConfetti((n) => n + 1);
     setIsSending(true);
-    setSendError(null);
     try {
       const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
       const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
@@ -111,20 +104,15 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
         body,
       });
       const data = await res.json().catch(() => null as any);
-      if (!res.ok)
-        throw new Error(
-          data && data.description
-            ? data.description
-            : `Ошибка отправки (${res.status})`
-        );
+      if (!res.ok) {
+        const desc =
+          data && data.description ? data.description : `HTTP ${res.status}`;
+        console.error("Telegram send error:", desc, data);
+        throw new Error(desc);
+      }
       setSent(true);
     } catch (e: any) {
-      const msg = e?.message || "Неизвестная ошибка";
-      if (msg.includes("Telegram")) {
-        showConfigHint("Нет Telegram настроек");
-      } else {
-        setSendError(msg);
-      }
+      console.error("Telegram send exception:", e?.message || e);
     } finally {
       setIsSending(false);
     }
@@ -144,11 +132,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                   origin={confettiOrigin}
                   onDone={() => setConfettiOrigin(null)}
                 />
-              )}
-              {configToast && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-2 px-3 py-2 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-marck text-sm shadow toast-appear">
-                  {configToast}
-                </div>
               )}
 
               <h2 className="text-3xl font-ruslan text-center mb-2">
@@ -181,11 +164,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 error={touchedSubmit && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)}
               />
 
-              {sendError && (
-                <div className="mt-2 text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 text-sm">
-                  {sendError}
-                </div>
-              )}
               {sent && (
                 <div className="mt-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm font-medium">
                   Отправлено! Жду ответа в Telegram 💛
