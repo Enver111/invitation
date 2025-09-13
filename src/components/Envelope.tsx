@@ -102,10 +102,13 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const chosenPlace = placePreset || place;
       const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}`;
       const url = `/telegram/bot${BOT_TOKEN}/sendMessage`;
+      const body = new URLSearchParams({ chat_id: String(CHAT_ID), text: msg });
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: Number(CHAT_ID), text: msg }),
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body,
       });
       const data = await res.json().catch(() => null as any);
       if (!res.ok)
