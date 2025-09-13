@@ -104,7 +104,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const url = `/telegram/bot${BOT_TOKEN}/sendMessage?chat_id=${encodeURIComponent(
         CHAT_ID
       )}&text=${encodeURIComponent(msg)}`;
-      const res = await fetch(url, { method: "GET" });
+      const res = await fetch(url, { method: "POST" });
       const data = await res.json().catch(() => null as any);
       if (!res.ok)
         throw new Error(
