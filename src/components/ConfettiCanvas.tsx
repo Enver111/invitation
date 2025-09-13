@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 interface ConfettiCanvasProps {
   origin: { x: number; y: number };

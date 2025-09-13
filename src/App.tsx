@@ -1,26 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import "./index.css";
 import Envelope from "./components/Envelope";
 
-// Simple date formatting for Telegram payload
-function formatDateISO(date: Date | null): string {
-  if (!date) return "";
-  return date.toISOString().split("T")[0];
-}
-
 function App() {
-  const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
-  const [showLetter, setShowLetter] = useState(false);
-  const [place, setPlace] = useState("");
-  const [placePreset, setPlacePreset] = useState("");
-  const [date, setDate] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [yesPressedOnce, setYesPressedOnce] = useState(false);
-
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const noBtnRef = useRef<HTMLButtonElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Start audio on first user interaction (mobile autoplay policy)
   useEffect(() => {

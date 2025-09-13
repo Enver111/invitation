@@ -57,7 +57,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
 
   const placeOk = place.trim().length > 0 || placePreset.trim().length > 0;
   const dateOk = !!date;
-  const timeOk = /^([01]\d|2[0-3]):[0-5]\d$/.test(time) || time === "";
   const canSend = placeOk && dateOk && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
   const showToast = (message: string) => {
