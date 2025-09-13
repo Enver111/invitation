@@ -95,32 +95,104 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const chosenPlace = placePreset || place;
       const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}`;
       const url = `/telegram/bot${BOT_TOKEN}/sendMessage`;
-      const body = new URLSearchParams({ chat_id: String(CHAT_ID), text: msg });
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        },
-        body,
-      });
-      const raw = await res.text();
-      let data: any = null;
+      // Try 1: x-www-form-urlencoded
+      let ok = false;
+      let lastError: any = null;
+      // form-encoded
       try {
-        data = JSON.parse(raw);
-      } catch {}
-      if (!res.ok) {
-        const desc =
-          data && data.description
-            ? data.description
-            : res.statusText || `HTTP ${res.status}`;
-        console.error("Telegram send error:", {
-          status: res.status,
-          statusText: res.statusText,
-          desc,
-          raw,
-          data,
+        const body = new URLSearchParams({
+          chat_id: String(CHAT_ID),
+          text: msg,
         });
-        throw new Error(desc);
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          },
+          body,
+        });
+        const raw = await res.text();
+        let data: any = null;
+        try {
+          data = JSON.parse(raw);
+        } catch {}
+        if (!res.ok || (data && data.ok === false)) {
+          console.warn("Telegram try1 form-urlencoded failed:", {
+            status: res.status,
+            raw,
+            data,
+          });
+          lastError = data || raw || res.status;
+        } else {
+          ok = true;
+        }
+      } catch (e: any) {
+        console.warn("Telegram try1 exception:", e?.message || e);
+        lastError = e;
+      }
+
+      // Try 2: JSON
+      if (!ok) {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: Number(CHAT_ID), text: msg }),
+          });
+          const raw = await res.text();
+          let data: any = null;
+          try {
+            data = JSON.parse(raw);
+          } catch {}
+          if (!res.ok || (data && data.ok === false)) {
+            console.warn("Telegram try2 JSON failed:", {
+              status: res.status,
+              raw,
+              data,
+            });
+            lastError = data || raw || res.status;
+          } else {
+            ok = true;
+          }
+        } catch (e: any) {
+          console.warn("Telegram try2 exception:", e?.message || e);
+          lastError = e;
+        }
+      }
+
+      // Try 3: GET query (last resort)
+      if (!ok) {
+        try {
+          const getUrl = `/telegram/bot${BOT_TOKEN}/sendMessage?chat_id=${encodeURIComponent(
+            String(CHAT_ID)
+          )}&text=${encodeURIComponent(msg)}`;
+          const res = await fetch(getUrl, { method: "GET" });
+          const raw = await res.text();
+          let data: any = null;
+          try {
+            data = JSON.parse(raw);
+          } catch {}
+          if (!res.ok || (data && data.ok === false)) {
+            console.error("Telegram try3 GET failed:", {
+              status: res.status,
+              raw,
+              data,
+            });
+            lastError = data || raw || res.status;
+          } else {
+            ok = true;
+          }
+        } catch (e: any) {
+          console.error("Telegram try3 exception:", e?.message || e);
+          lastError = e;
+        }
+      }
+
+      if (!ok) {
+        throw new Error(
+          (lastError && (lastError.description || String(lastError))) ||
+            "Bad Request"
+        );
       }
       setSent(true);
     } catch (e: any) {
