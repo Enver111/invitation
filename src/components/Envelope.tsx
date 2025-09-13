@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import PlaceInput from "./PlaceInput";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
+import ConfettiCanvas from "./ConfettiCanvas";
 
 const LETTER_SLIDE_DELAY_MS = 450;
 
@@ -26,6 +27,11 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   const [touchedSubmit, setTouchedSubmit] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [configToast, setConfigToast] = useState<string | null>(null);
+  const [confetti, setConfetti] = useState<number>(0);
+  const [confettiOrigin, setConfettiOrigin] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const overlayCardRef = useRef<HTMLDivElement | null>(null);
@@ -78,6 +84,16 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       showToast(message);
       return;
     }
+    // Trigger confetti burst immediately for UX
+    const btn = document.activeElement as HTMLElement | null;
+    const rect = btn?.getBoundingClientRect();
+    if (rect) {
+      setConfettiOrigin({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      });
+    }
+    setConfetti((n) => n + 1);
     setIsSending(true);
     setSendError(null);
     try {
@@ -86,13 +102,17 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       if (!BOT_TOKEN || !CHAT_ID) throw new Error("Нет Telegram настроек");
       const chosenPlace = placePreset || place;
       const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}`;
-      const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: msg }),
-      });
-      if (!res.ok) throw new Error("Ошибка отправки");
+      const url = `/telegram/bot${BOT_TOKEN}/sendMessage?chat_id=${encodeURIComponent(
+        CHAT_ID
+      )}&text=${encodeURIComponent(msg)}`;
+      const res = await fetch(url, { method: "GET" });
+      const data = await res.json().catch(() => null as any);
+      if (!res.ok)
+        throw new Error(
+          data && data.description
+            ? data.description
+            : `Ошибка отправки (${res.status})`
+        );
       setSent(true);
     } catch (e: any) {
       const msg = e?.message || "Неизвестная ошибка";
@@ -115,6 +135,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
               ref={overlayCardRef}
               className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-8 max-w-sm w-full full-letter-enter envelope-shadow relative overflow-visible"
             >
+              {confettiOrigin && (
+                <ConfettiCanvas
+                  origin={confettiOrigin}
+                  onDone={() => setConfettiOrigin(null)}
+                />
+              )}
               {configToast && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-2 px-3 py-2 rounded-full bg-rose-100 text-rose-800 border border-rose-300 font-marck text-sm shadow toast-appear">
                   {configToast}
@@ -179,8 +205,42 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                       ? "bg-amber-100 text-amber-800 border-amber-300"
                       : "bg-gray-100 text-gray-400 border-gray-200 opacity-90"
                   }`}
+                  style={{ position: "relative" }}
                 >
                   Согласиться
+                  {/* Confetti burst */}
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <span
+                      key={`${confetti}-${i}`}
+                      className="confetti-piece"
+                      style={
+                        {
+                          left: "50%",
+                          top: "50%",
+                          backgroundColor: [
+                            "#f59e0b",
+                            "#fde68a",
+                            "#fca5a5",
+                            "#86efac",
+                            "#93c5fd",
+                          ][i % 5],
+                          // distribute around in a circle
+                          // random-ish delta
+                          // dx, dy in px
+                          // rot in deg
+                          // dur in ms
+                          ["--dx" as any]: `${
+                            Math.cos((i / 12) * 2 * Math.PI) * 60
+                          }px`,
+                          ["--dy" as any]: `${
+                            Math.sin((i / 12) * 2 * Math.PI) * -60
+                          }px`,
+                          ["--rot" as any]: `${(i * 90) % 360}deg`,
+                          ["--dur" as any]: `${700 + (i % 4) * 80}ms`,
+                        } as React.CSSProperties
+                      }
+                    />
+                  ))}
                 </button>
 
                 <div className="text-sm font-marck text-gray-800 text-center mt-4">

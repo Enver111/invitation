@@ -179,3 +179,25 @@ input[type="date"].input-fluid {
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
 }
+
+/* Confetti burst for Agree button */
+.confetti-piece {
+  position: absolute;
+  width: 6px;
+  height: 10px;
+  border-radius: 1px;
+  pointer-events: none;
+  opacity: 0;
+  animation: confetti-burst var(--dur, 900ms) ease-out forwards;
+}
+@keyframes confetti-burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), var(--dy, -60px))
+      rotate(var(--rot, 180deg));
+  }
+}
