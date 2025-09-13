@@ -101,10 +101,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       if (!BOT_TOKEN || !CHAT_ID) throw new Error("Нет Telegram настроек");
       const chosenPlace = placePreset || place;
       const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}`;
-      const url = `/telegram/bot${BOT_TOKEN}/sendMessage?chat_id=${encodeURIComponent(
-        CHAT_ID
-      )}&text=${encodeURIComponent(msg)}`;
-      const res = await fetch(url, { method: "POST" });
+      const url = `/telegram/bot${BOT_TOKEN}/sendMessage`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: Number(CHAT_ID), text: msg }),
+      });
       const data = await res.json().catch(() => null as any);
       if (!res.ok)
         throw new Error(
