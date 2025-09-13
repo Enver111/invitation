@@ -3,6 +3,7 @@ import PlaceInput from "./PlaceInput";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 import ConfettiCanvas from "./ConfettiCanvas";
+import stampPng from "../assets/stamp.png";
 
 const LETTER_SLIDE_DELAY_MS = 450;
 
@@ -83,7 +84,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       showToast(message);
       return;
     }
-    // Trigger confetti burst immediately for UX
     const btn = document.activeElement as HTMLElement | null;
     const rect = btn?.getBoundingClientRect();
     if (rect) {
@@ -207,7 +207,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                   style={{ position: "relative" }}
                 >
                   Согласиться
-                  {/* Confetti burst */}
                   {Array.from({ length: 12 }).map((_, i) => (
                     <span
                       key={`${confetti}-${i}`}
@@ -223,11 +222,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                             "#86efac",
                             "#93c5fd",
                           ][i % 5],
-                          // distribute around in a circle
-                          // random-ish delta
-                          // dx, dy in px
-                          // rot in deg
-                          // dur in ms
                           ["--dx" as any]: `${
                             Math.cos((i / 12) * 2 * Math.PI) * 60
                           }px`,
@@ -251,7 +245,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
         </div>
       )}
 
-      {/* Envelope view remains the same below */}
       <div
         ref={containerRef}
         className={`relative envelope-shadow perspective-1000 rounded-lg ${
@@ -259,9 +252,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
         }`}
         style={{ width: "86vw", maxWidth: 360, height: "54vw", maxHeight: 220 }}
       >
-        {/* Back panel */}
         <div className="absolute inset-0 bg-[#DFB891] rounded-lg border border-gray-300 z-10" />
-        {/* Letter (starts under pocket-front) */}
         <div
           className={`absolute left-3 right-3 top-3 bottom-3 bg-white rounded-md envelope-shadow flex items-center justify-center transition-transform z-20 ${
             showLetterOut ? "letter-slide-out" : ""
@@ -277,7 +268,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
             </div>
           </div>
         </div>
-        {/* Pocket front */}
         <div
           className="absolute left-0 right-0 bg-[#DFB891] border-t border-gray-300 z-30"
           style={{
@@ -287,14 +277,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
             borderBottomRightRadius: 12,
           }}
         />
-        {/* Top flap */}
         <div
           className={`absolute left-0 right-0 top-0 h-1/2 bg-[#DFB891] border-b border-black rounded-t-lg origin-top transition-transform duration-700 preserve-3d z-40 ${
             isOpen ? "flip-open" : ""
           }`}
           style={{ backfaceVisibility: "hidden" }}
         />
-        {/* Icon button */}
         <button
           onClick={handleOpenClick}
           disabled={isOpen}
@@ -305,11 +293,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
           }`}
           aria-label="Открыть конверт"
         >
-          <img
-            src="/src/assets/stamp.png"
-            alt="icon"
-            className="h-25 w-auto p-0"
-          />
+          <img src={stampPng} alt="icon" className="h-25 w-auto p-0" />
           <span className="text-xs font-marck text-white text-center absolute left-0 right-0 font-ruslan">
             Открыть <br /> конверт
           </span>
