@@ -103,11 +103,23 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
         },
         body,
       });
-      const data = await res.json().catch(() => null as any);
+      const raw = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(raw);
+      } catch {}
       if (!res.ok) {
         const desc =
-          data && data.description ? data.description : `HTTP ${res.status}`;
-        console.error("Telegram send error:", desc, data);
+          data && data.description
+            ? data.description
+            : res.statusText || `HTTP ${res.status}`;
+        console.error("Telegram send error:", {
+          status: res.status,
+          statusText: res.statusText,
+          desc,
+          raw,
+          data,
+        });
         throw new Error(desc);
       }
       setSent(true);
