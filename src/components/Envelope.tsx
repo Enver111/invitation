@@ -3,9 +3,9 @@ import PlaceInput from "./PlaceInput";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 import stampPng from "../assets/stamp.png";
+import Fireworks from "./Fireworks";
 
 const LETTER_SLIDE_DELAY_MS = 450;
-const PRESETS = ["Парк", "Кино", "Кофейня", "Набережная"] as const;
 
 interface EnvelopeProps {
   onOpen?: () => void;
@@ -51,8 +51,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
     onOpen?.();
   };
 
-  const isPresetPlace = PRESETS.includes(placePreset as any);
-  const placeOk = isPresetPlace || place.trim().length > 0;
+  const placeOk = place.trim().length > 0 || placePreset.trim().length > 0;
   const dateOk = !!date;
   const canSend = placeOk && dateOk && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
@@ -81,7 +80,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
       const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (!BOT_TOKEN || !CHAT_ID) throw new Error("Нет Telegram настроек");
-      const chosenPlace = isPresetPlace ? placePreset : place.trim();
+      const chosenPlace = placePreset || place;
       const extra = wishes.trim().length ? `\nПожелания: ${wishes.trim()}` : "";
       const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}${extra}`;
       const url = `/telegram/bot${BOT_TOKEN}/sendMessage`;
@@ -195,6 +194,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
 
   return (
     <div className="w-full flex items-center justify-center">
+      {sent && <Fireworks onDone={() => setSent(false)} />}
       {showOverlay && (
         <div className="fixed inset-0 z-[60] overflow-y-auto">
           <div className="min-h-full flex justify-center px-2 py-4">
@@ -203,11 +203,11 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
               className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-8 max-w-sm w-full full-letter-enter envelope-shadow relative overflow-visible"
             >
               <h2 className="text-3xl font-ruslan text-center mb-2">
-                Небольшая прогулка?
+                Приглашаю Вас на прогулку.
               </h2>
-              <p className="font-marck text-lg leading-relaxed text-gray-800 text-center mb-3">
-                Давай выберем место и день — совсем ненадолго, просто пройтись и
-                вместе улыбнуться.
+              <p className="font-marck text-xl leading-relaxed text-gray-800 text-center mb-3">
+                Давайте выберем место, день и время — совсем ненадолго, просто
+                пройтись и вместе улыбнуться.
               </p>
 
               <PlaceInput
@@ -218,12 +218,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 error={touchedSubmit && !placeOk}
               />
 
-              <label className="block text-sm font-marck mt-4 mb-1">
+              <label className="block text-lg font-marck mt-4 mb-1">
                 Когда?
               </label>
               <DatePicker value={date} onChange={setDate} />
 
-              <label className="block text-sm font-marck mt-4 mb-1">
+              <label className="block text-lg font-marck mt-4 mb-1">
                 Во сколько?
               </label>
               <TimePicker
@@ -232,7 +232,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 error={touchedSubmit && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)}
               />
 
-              <label className="block text-sm font-marck mt-4 mb-1">
+              <label className="block text-lg font-marck mt-4 mb-1">
                 Пожелания
               </label>
               <textarea
@@ -277,7 +277,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                   )}
                 </button>
 
-                <div className="text-sm font-marck text-gray-800 text-center mt-4">
+                <div className="text-sm font-marck text-gray-800 text-center mt-12">
                   P.S. Я очень жду ответа Enver O.
                 </div>
               </div>
