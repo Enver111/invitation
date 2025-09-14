@@ -21,6 +21,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   const [placePreset, setPlacePreset] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [wishes, setWishes] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [touchedSubmit, setTouchedSubmit] = useState(false);
@@ -79,12 +80,12 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (!BOT_TOKEN || !CHAT_ID) throw new Error("Нет Telegram настроек");
       const chosenPlace = placePreset || place;
-      const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}`;
+      const extra = wishes.trim().length ? `\nПожелания: ${wishes.trim()}` : "";
+      const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}${extra}`;
       const url = `/telegram/bot${BOT_TOKEN}/sendMessage`;
       // Try 1: x-www-form-urlencoded
       let ok = false;
       let lastError: any = null;
-      // form-encoded
       try {
         const body = new URLSearchParams({
           chat_id: String(CHAT_ID),
@@ -227,6 +228,17 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 value={time}
                 onChange={setTime}
                 error={touchedSubmit && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)}
+              />
+
+              <label className="block text-sm font-marck mt-4 mb-1">
+                Пожелания
+              </label>
+              <textarea
+                className="input-fluid rounded-lg border border-gray-300 px-3 py-2 text-base font-marck focus:outline-none focus:ring-2 focus:ring-amber-400"
+                rows={3}
+                placeholder="Например: плед, кофе с собой, хот-доги, любимая песня…"
+                value={wishes}
+                onChange={(e) => setWishes(e.target.value)}
               />
 
               <div
