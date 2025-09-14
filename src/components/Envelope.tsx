@@ -25,6 +25,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   const [sent, setSent] = useState(false);
   const [touchedSubmit, setTouchedSubmit] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const overlayCardRef = useRef<HTMLDivElement | null>(null);
@@ -180,6 +181,8 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
         );
       }
       setSent(true);
+      setSuccessToast("Ураааааа! 💛");
+      setTimeout(() => setSuccessToast(null), 5000);
     } catch (e: any) {
       console.error("Telegram send exception:", e?.message || e);
     } finally {
@@ -226,12 +229,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                 error={touchedSubmit && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)}
               />
 
-              {sent && (
-                <div className="mt-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm font-medium">
-                  Отправлено! Жду ответа в Telegram 💛
-                </div>
-              )}
-
               <div
                 ref={buttonsWrapRef}
                 className="mt-4 h-28 relative flex flex-col items-center justify-center"
@@ -241,16 +238,29 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                     {toast}
                   </div>
                 )}
+                {successToast && (
+                  <div className="absolute -top-2 translate-y-[-100%] px-3 py-2 rounded-full bg-green-100 text-green-800 border border-green-300 font-marck text-sm shadow toast-appear">
+                    {successToast}
+                  </div>
+                )}
                 <button
                   onClick={handleYes}
-                  aria-disabled={!canSend}
-                  className={`px-6 py-3 rounded-full border font-marck active:scale-95 ${
-                    canSend
-                      ? "bg-amber-100 text-amber-800 border-amber-300"
+                  aria-disabled={!canSend || isSending}
+                  className={`px-6 py-3 rounded-full border font-marck transition-all ${
+                    canSend && !isSending
+                      ? "bg-amber-100 text-amber-800 border-amber-300 active:scale-95"
                       : "bg-gray-100 text-gray-400 border-gray-200 opacity-90"
                   }`}
+                  disabled={isSending}
                 >
-                  Согласиться
+                  {isSending ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <span className="btn-spinner" />
+                      <span>Отправляю…</span>
+                    </span>
+                  ) : (
+                    "Согласиться"
+                  )}
                 </button>
 
                 <div className="text-sm font-marck text-gray-800 text-center mt-4">
