@@ -41,7 +41,7 @@ export default function PlaceInput({
 
   return (
     <div className="w-full">
-      <label className="block text-sm font-marck mb-1">Где?</label>
+      <label className="block text-lg font-marck mb-1">Где?</label>
       <input
         type="text"
         placeholder="На Ваше усмотрение"
@@ -52,7 +52,7 @@ export default function PlaceInput({
           if (preset) setPreset("");
         }}
       />
-      <div className="text-center text-xs text-gray-500 my-2 font-marck">
+      <div className="text-center text-base text-gray-500 my-2 font-marck">
         или
       </div>
       {selectedNote && (
@@ -81,9 +81,9 @@ export default function PlaceInput({
         ))}
         <button
           type="button"
-          onClick={() => handleChip("")}
+          onClick={() => handleChip("__other__")}
           className={`px-3 py-2 rounded-full border text-sm font-marck ${
-            preset === ""
+            preset === "__other__"
               ? "bg-rose-100 text-rose-800 border-rose-300"
               : "bg-white text-gray-800 border-gray-300"
           }`}

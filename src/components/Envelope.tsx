@@ -5,6 +5,7 @@ import TimePicker from "./TimePicker";
 import stampPng from "../assets/stamp.png";
 
 const LETTER_SLIDE_DELAY_MS = 450;
+const PRESETS = ["Парк", "Кино", "Кофейня", "Набережная"] as const;
 
 interface EnvelopeProps {
   onOpen?: () => void;
@@ -50,7 +51,8 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
     onOpen?.();
   };
 
-  const placeOk = place.trim().length > 0 || placePreset.trim().length > 0;
+  const isPresetPlace = PRESETS.includes(placePreset as any);
+  const placeOk = isPresetPlace || place.trim().length > 0;
   const dateOk = !!date;
   const canSend = placeOk && dateOk && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
@@ -79,7 +81,7 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
       const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (!BOT_TOKEN || !CHAT_ID) throw new Error("Нет Telegram настроек");
-      const chosenPlace = placePreset || place;
+      const chosenPlace = isPresetPlace ? placePreset : place.trim();
       const extra = wishes.trim().length ? `\nПожелания: ${wishes.trim()}` : "";
       const msg = `\uD83C\uDF3A Приглашение\n\nПойдём гулять?\nГде: ${chosenPlace}\nКогда: ${date} ${time}${extra}`;
       const url = `/telegram/bot${BOT_TOKEN}/sendMessage`;
