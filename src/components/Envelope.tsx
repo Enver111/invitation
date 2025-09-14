@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import PlaceInput from "./PlaceInput";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
-import ConfettiCanvas from "./ConfettiCanvas";
 import stampPng from "../assets/stamp.png";
 
 const LETTER_SLIDE_DELAY_MS = 450;
@@ -26,11 +25,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
   const [sent, setSent] = useState(false);
   const [touchedSubmit, setTouchedSubmit] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [confetti, setConfetti] = useState<number>(0);
-  const [confettiOrigin, setConfettiOrigin] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const overlayCardRef = useRef<HTMLDivElement | null>(null);
@@ -78,15 +72,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
       showToast(message);
       return;
     }
-    const btn = document.activeElement as HTMLElement | null;
-    const rect = btn?.getBoundingClientRect();
-    if (rect) {
-      setConfettiOrigin({
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-      });
-    }
-    setConfetti((n) => n + 1);
     setIsSending(true);
     try {
       const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
@@ -211,13 +196,6 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
               ref={overlayCardRef}
               className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-8 max-w-sm w-full full-letter-enter envelope-shadow relative overflow-visible"
             >
-              {confettiOrigin && (
-                <ConfettiCanvas
-                  origin={confettiOrigin}
-                  onDone={() => setConfettiOrigin(null)}
-                />
-              )}
-
               <h2 className="text-3xl font-ruslan text-center mb-2">
                 Небольшая прогулка?
               </h2>
@@ -271,36 +249,8 @@ export default function Envelope({ onOpen }: EnvelopeProps) {
                       ? "bg-amber-100 text-amber-800 border-amber-300"
                       : "bg-gray-100 text-gray-400 border-gray-200 opacity-90"
                   }`}
-                  style={{ position: "relative" }}
                 >
                   Согласиться
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <span
-                      key={`${confetti}-${i}`}
-                      className="confetti-piece"
-                      style={
-                        {
-                          left: "50%",
-                          top: "50%",
-                          backgroundColor: [
-                            "#f59e0b",
-                            "#fde68a",
-                            "#fca5a5",
-                            "#86efac",
-                            "#93c5fd",
-                          ][i % 5],
-                          ["--dx" as any]: `${
-                            Math.cos((i / 12) * 2 * Math.PI) * 60
-                          }px`,
-                          ["--dy" as any]: `${
-                            Math.sin((i / 12) * 2 * Math.PI) * -60
-                          }px`,
-                          ["--rot" as any]: `${(i * 90) % 360}deg`,
-                          ["--dur" as any]: `${700 + (i % 4) * 80}ms`,
-                        } as React.CSSProperties
-                      }
-                    />
-                  ))}
                 </button>
 
                 <div className="text-sm font-marck text-gray-800 text-center mt-4">
